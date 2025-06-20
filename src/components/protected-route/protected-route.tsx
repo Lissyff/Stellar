@@ -1,29 +1,39 @@
-// src/components/protected-route/protected-route.tsx
-import { FC } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAppSelector } from '../../hooks/store';
-import { selectUser } from '../../services/slices/authSlice';
+import { useSelector } from '../../services/store';
+import { Preloader } from '../ui/preloader';
+import {
+  isAuthCheckedSelector,
+  loginUserRequestSelector
+} from '../../services/slices/user/slice';
 
-interface IProtectedRoute {
+type ProtectedRouteProps = {
   onlyUnAuth?: boolean;
-  children: React.ReactNode;
-}
+  children: React.ReactElement;
+};
 
-export const ProtectedRoute: FC<IProtectedRoute> = ({ onlyUnAuth = false, children }) => {
-  const user = useAppSelector(selectUser);
+export const ProtectedRoute = ({
+  onlyUnAuth,
+  children
+}: ProtectedRouteProps) => {
+  const isAuthChecked = useSelector(isAuthCheckedSelector);
+  const loginUserRequest = useSelector(loginUserRequestSelector);
   const location = useLocation();
 
-  if (onlyUnAuth && user) {
-    // Пользователь авторизован, но маршрут только для неавторизованных
-    const from = location.state?.from || '/';
-    return <Navigate to={from} replace />;
+  // В процессе подгрузки пользователя
+  if (!isAuthChecked && loginUserRequest) {
+    return <Preloader />;
   }
 
-  if (!onlyUnAuth && !user) {
-    // Маршрут защищён, но пользователь не авторизован
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  // Нужна авторизация
+  if (!onlyUnAuth && !isAuthChecked) {
+    return <Navigate replace to='/login' state={{ from: location }} />;
   }
 
-  // Все проверки пройдены
-  return <>{children}</>;
+  // Мы авторизованы
+  if (onlyUnAuth && isAuthChecked) {
+    const from = location.state?.from || { pathname: '/' };
+    return <Navigate replace to={from} state={location} />;
+  }
+
+  return children;
 };

@@ -1,32 +1,41 @@
-import { ConstructorPage } from '@pages';
-import { Feed } from '@pages/feed';
-import { Login } from '@pages/login';
-import { Register } from '@pages/register';
-import { ForgotPassword } from '@pages/forgot-password';
-import { ResetPassword } from '@pages/reset-password';
-import { Profile } from '@pages/profile';
-import { ProfileOrders } from '@pages/profile-orders';
-import { NotFound404 } from '@pages/not-found';
-import { IngredientsDetails } from '@components/ingredients-details';
-import { OrderInfo } from '@components/order-info';
-import { Modal } from '@components/modal';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import '../../index.css';
 import styles from './app.module.css';
 
-import { AppHeader } from '@components';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { ProtectedRoute } from '../protected-route';
-import { FC } from 'react';
+import {
+  AppHeader,
+  IngredientDetails,
+  Modal,
+  OrderInfo,
+  ProtectedRoute
+} from '@components';
+import {
+  ConstructorPage,
+  Feed,
+  ForgotPassword,
+  Login,
+  NotFound404,
+  Profile,
+  ProfileOrders,
+  Register,
+  ResetPassword
+} from '@pages';
+import { useEffect } from 'react';
+import { useDispatch } from '../../services/store';
+import { getIngredientsThunk } from '../../services/slices/ingredients/actions';
+import { getUserThunk } from '../../services/slices/user/actions';
 
-// Компонент для модальных окон с возможностью возврата назад
-const ModalRoute: FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
+const App = () => {
+  const dispatch = useDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   const background = location.state?.background;
 
-  const handleClose = () => {
-    navigate(-1);
-  };
+  // Первоначальная загрузка данных
+  useEffect(() => {
+    dispatch(getIngredientsThunk());
+    dispatch(getUserThunk());
+  }, 
 
   return (
     <Modal onClose={handleClose}>
